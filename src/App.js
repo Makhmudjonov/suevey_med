@@ -4,11 +4,15 @@ import {
   Container, Typography, FormControl, InputLabel, Box, RadioGroup, FormControlLabel, Radio
 } from '@mui/material';
 
+
+
+
 function App() {
 
   const [categoryRisk, setCategoryRisk] = useState(null);
 
-  
+  const [selectedValues, setSelectedValues] = useState([]);
+
 
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({
@@ -25,6 +29,8 @@ function App() {
   const [score, setScore] = useState(0);
 
   const steps = ['Шаг 1: Персональная информация', 'Шаг 2: Медицинская информация', 'Шаг 3: Опросник Мориски'];
+
+
 
   useEffect(() => {
     if (formData.birthYear && /^\d{4}$/.test(formData.birthYear)) {
@@ -56,7 +62,87 @@ function App() {
         }
 
       });
-      alert(`Форма отправлена. Общий балл риска: ${totalScore.toFixed(2)}`);
+      // if (condition) {
+      //   alert(`Форма отправлена. Общий балл риска: ${totalScore.toFixed(2)}`);
+      // }
+
+      // Birinchi toifa: og‘ir holatlar
+const firstGroup = [
+  'Диссеминированный туберкулез (ДТЛ)',
+  'Милиарный туберкулез (МТ)',
+  'Казеозная пневмония (КП)',
+  'ВИЧ-инфекция',
+  'Бомж',
+  'Из заключения',
+  'Злоупотребление алкоголем',
+  'Употребление наркотиков',
+  'Онкология',
+];
+
+// Ikkinchi toifa: 75–90 va ФКТ
+const secondTbc = 'Фиброзно-кавернозный туберкулез (ФКТ)';
+
+// Uchinchi toifa
+const thirdGroup = ['Мужской', 'Ранее леченные', 'ВК+'];
+
+// To‘rtinchi toifa
+const fourthGroup = [
+  'Женский',
+  'Впервые выявленные',
+  'ВК-',
+  'Очаговый туберкулез (ОТ)',
+  'Инфильтративный туберкулез (ИТ)',
+  'Туберкулома',
+  'Кавернозный туберкулез (КТ)',
+  'Цирротический туберкулез (ЦТ)',
+  'Анемия',
+  'Сахарный диабет',
+  'ХНЗЛ',
+  'ССС',
+  'Язвенная болезнь',
+  'Гепатиты'
+]; 
+
+// selectedValues ichidagi sonni ajratamiz (yosh bo‘lishi mumkin)
+const numberValues = selectedValues.filter(v => !isNaN(parseInt(v)));
+const number = numberValues.length > 0 ? parseInt(numberValues[0]) : null;
+
+// 1-if
+const isFirst = firstGroup.some(item => selectedValues.includes(item));
+
+if (isFirst) {
+  console.log("1-guruh: og‘ir holatlar");
+}
+
+// 2-if
+const isSecond = number >= 75 && number <= 90 && selectedValues.includes(secondTbc);
+
+if (isSecond) {
+  console.log("2-guruh: yoshi 75-90, ФКТ");
+}
+
+// 3-if
+const isThird =
+  selectedValues.includes('Мужской') &&
+  number >= 45 && number <= 74 &&
+  selectedValues.includes('Ранее леченные') &&
+  selectedValues.includes('ВК+');
+
+if (isThird) {
+  console.log("3-guruh: erkak, 45-74, davolangan, ВК+");
+}
+
+// 4-if
+const isFourth =
+  selectedValues.includes('Женский') &&
+  number >= 18 && number <= 44 &&
+  fourthGroup.some(item => selectedValues.includes(item));
+
+if (isFourth) {
+  console.log("4-guruh: ayol, 18-44, yengil shakllar");
+}
+
+
     } else {
       setActiveStep(prev => prev + 1);
     }
@@ -68,65 +154,36 @@ function App() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+     // Form ma'lumotlarini yangilash
+     setFormData((prevState) => {
+      const newFormData = { ...prevState, [name]: value };
 
-    let addedScore = 0;
-    if (name === 'category') {
-      if (value === 'Впервые выявленные') addedScore = 0.80;
-      else if (value === 'Ранее леченные') addedScore = 1.34;
-      else if (value === 'ВК+') addedScore = 1.36;
-      else if (value === 'ВК-') addedScore = 0.73;
+      // selectedValues-ni yangilash
+      setSelectedValues((prevSelectedValues) => {
+        // Eski qiymatni olib tashlash
+        const updatedList = prevSelectedValues.filter((item) => item !== prevState[name]);
+
+        // Yangi qiymatni qo'shish
+        updatedList.push(value);
+
+        return updatedList; // Yangilangan listni qaytarish
+      });
+
+      return newFormData;
+    });
+    let addedScore = 0
+
+    if (name === "tuberculosisType"){
+
     }
-
-    if (name === 'tuberculosisType') {
-      const tbScores = {
-        'Очаговый туберкулез (ОТ)': 0.51,
-        'Инфильтративный туберкулез (ИТ)': 0.88,
-        'Диссеминированный туберкулез (ДТЛ)': 2.95,
-        'Туберкулома': 0.66,
-        'Кавернозный туберкулез (КТ)': 0.66,
-        'Фиброзно-кавернозный туберкулез (ФКТ)': 1.76,
-        'Цирротический туберкулез (ЦТ)': 0.80,
-        'Милиарный туберкулез (МТ)': 12.00,
-        'Казеозная пневмония (КП)': 8.00,
-        'Генерализованный туберкулез': 0.00,
-      }; 
-      addedScore = tbScores[value] || 0;
-    }
-
-    if (name === 'socialStatus') {
-      const socialScores = {
-        'Бомж': 2.00,
-        'Из заключения': 4.00,
-        'Злоупотребление алкоголем': 4.85,
-        'Употребление наркотиков': 7.00,
-      };
-      addedScore = socialScores[value] || 0;
-    }
-
-    if (name === 'chronicDiseases') {
-      const diseaseScores = {
-        'Анемия': 0.18,
-        'Сахарный диабет': 0.93,
-        'Онкология': 4.00,
-        'ХНЗЛ': 0.70,
-        'ССС': 0.89,
-        'Язвенная болезнь': 0.88,
-        'Гепатиты': 0.90,
-        'ХПН': 1.25,
-        'ВИЧ-инфекция': 2.21,
-        'Психические заболевания': 0.0,
-        'Беременность': 0.0,
-      };
-      addedScore = diseaseScores[value] || 0;
-    }
-
     if ([
       'category', 'tuberculosisType', 'socialStatus', 'chronicDiseases'
     ].includes(name)) {
       setScore(prev => prev + addedScore);
     }
   };
+
+  
 
   // if (
   //   ['ДТЛ', 'МТ', 'КП'].includes(formData.tuberculosisType) ||
@@ -171,8 +228,39 @@ function App() {
     setFormData({ ...formData, questions: updated });
   };
 
+  // Formani yuborish
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log('Tanlangan qiymatlar:', selectedValues);
+  };
+
+  const handleClick = (e) => {
+    handleNext();  // orqaga qaytish
+    handleSubmit(e);  // forma yuborish
+  };
+
   return (
-    <Container maxWidth="sm">
+    <div
+  style={{
+    backgroundImage: "url(/assets/fon.jpg)",
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+    minHeight: '100vh', // butun ekran balandligi
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+  }}
+>
+
+    <Container maxWidth="md" style={{
+      maxHeight: '900px',
+      backgroundColor: 'white',
+      padding: '20px',
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+      borderRadius: '12px',
+      marginTop: '50px',
+    }}>
       <Box my={4}>
         <Typography variant="h4" gutterBottom>Оценка риска заболевания</Typography>
         <Stepper activeStep={activeStep} alternativeLabel>
@@ -266,7 +354,7 @@ function App() {
           )}
 
 {activeStep === 2 && (
-  <>
+  <Box sx={{ maxHeight: '400px', overflowY: 'auto', pr: 2 }}>
     {questions.map((question, index) => (
       <Box key={index} my={2}>
         <Typography>{question}</Typography>
@@ -294,17 +382,18 @@ function App() {
         )}
       </Box>
     ))}
-  </>
+  </Box>
 )}
 
         </Box>
 
         <Box mt={2} display="flex" justifyContent="space-between">
           <Button disabled={activeStep === 0} onClick={handleBack}>Назад</Button>
-          <Button variant="contained" color="primary" onClick={handleNext}>{activeStep === steps.length - 1 ? 'Отправить' : 'Далее'}</Button>
+          <Button variant="contained" color="primary" onClick={handleClick}>{activeStep === steps.length - 1 ? 'Отправить' : 'Далее'}</Button>
         </Box>
       </Box>
     </Container>
+    </div>
   );
 }
 
